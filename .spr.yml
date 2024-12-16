@@ -1,7 +1,42 @@
-githubRepoOwner: wormhole-foundation
-githubRepoName: wormhole
-githubHost: github.com
-requireChecks: true
-requireApproval: true
-githubRemote: origin
-githubBranch: main
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - ${{ secrets.githubBranch }}  # Используйте переменную для динамической настройки ветки
+  pull_request: {}
+
+env:
+  GITHUB_REPO_OWNER: ${{ secrets.githubRepoOwner }}
+  GITHUB_REPO_NAME: ${{ secrets.githubRepoName }}
+  GITHUB_HOST: ${{ secrets.githubHost }}
+  GITHUB_REMOTE: ${{ secrets.githubRemote }}
+  GITHUB_BRANCH: ${{ secrets.githubBranch }}
+  REQUIRE_CHECKS: ${{ secrets.requireChecks }}
+  REQUIRE_APPROVAL: ${{ secrets.requireApproval }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.GITHUB_REPO_OWNER }}/${{ env.GITHUB_REPO_NAME }}
+          ref: ${{ env.GITHUB_BRANCH }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Add your job steps for testing, building, etc. here
+
+  approval:
+    if: ${{ env.REQUIRE_APPROVAL == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Example: Require manual approval for deployment
+      - name: Request manual approval
+        uses: peter-evans/approve-pull-request-action@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
